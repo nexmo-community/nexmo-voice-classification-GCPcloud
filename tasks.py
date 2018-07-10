@@ -2,8 +2,11 @@ import os
 import io
 import nexmo
 from google.cloud import speech
-from google.cloud.speech import enums
-from google.cloud.speech import types
+from google.cloud.speech import enums as speech_enums
+from google.cloud.speech import types as speech_types
+from google.cloud import language
+from google.cloud.language import enums as language_enums
+from google.cloud.language import types as language_types
 import logzero
 from logzero import logger
 from config import huey
@@ -39,16 +42,38 @@ def transcribe_audio(*args, recording_uuid):
     # Loads the audio into memory
     with io.open(file_name, "rb") as audio_file:
         content = audio_file.read()
-        audio = types.RecognitionAudio(content=content)
+        audio = speech_types.RecognitionAudio(content=content)
 
-    config = types.RecognitionConfig(
-        encoding=enums.RecognitionConfig.AudioEncoding.LINEAR16,
+    config = speech_types.RecognitionConfig(
+        encoding=speech_enums.RecognitionConfig.AudioEncoding.LINEAR16,
         sample_rate_hertz=16000,
         language_code="en-US",
     )
 
     # Detects speech in the audio file
-    logger.debug(f"Sending file for transcribing")
+    logger.info(f"Sending file {recording_uuid} for transcribing")
     response = client.recognize(config, audio)
 
-    return {"transcript": response.results[0].alternatives[0].transcript}
+    return {
+        "transcription_text": response.results[0].alternatives[0].transcript,
+        "recording_uuid": recording_uuid,
+    }
+
+
+@huey.task()
+def classify_transcription(transcription_text, recording_uuid):
+    client = language.LanguageServiceClient()
+
+    document = language_types.Document(
+        content=transcription_text, type=language_enums.Document.Type.PLAIN_TEXT
+    )
+
+    logger.debug(f"Classifying transcription for recording {recording_uuid}")
+    categories = client.classify_text(document).categories
+
+    for category in categories:
+        print("=" * 20)
+        print("{:<16}: {}".format("name", category.name))
+        print("{:<16}: {}".format("confidence", category.confidence))
+
+    return True

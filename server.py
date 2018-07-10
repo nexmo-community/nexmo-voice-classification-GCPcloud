@@ -3,7 +3,7 @@ import logzero
 from logzero import logger
 from flask import Flask, request, jsonify
 from config import huey  # noqa
-from tasks import download_recording, transcribe_audio
+from tasks import download_recording, transcribe_audio, classify_transcription
 
 app = Flask(__name__)
 logzero.logfile("/tmp/nexmo-voice-classifier.log", maxBytes=1e6, backupCount=3)
@@ -35,10 +35,9 @@ def recordings_webhook():
         recording_meta["recording_url"], recording_meta["recording_uuid"]
     )
 
-    pipeline = download_recording_task.then(transcribe_audio)
+    pipeline = download_recording_task.then(transcribe_audio).then(
+        classify_transcription
+    )
+    huey.enqueue(pipeline)
 
-    results = huey.enqueue(pipeline)
-
-    logger.debug(results)
-
-    return "OK"
+    return "All done :)"

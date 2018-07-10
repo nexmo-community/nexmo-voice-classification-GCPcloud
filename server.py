@@ -1,14 +1,12 @@
 import os
-import nexmo
 import logzero
 from logzero import logger
 from flask import Flask, request, jsonify
+from config import huey  # noqa
+from tasks import download_recording
 
 app = Flask(__name__)
 logzero.logfile("/tmp/nexmo-voice-classifier.log", maxBytes=1e6, backupCount=3)
-nexmo_client = nexmo.Client(
-    application_id=os.environ["APPLICATION_ID"], private_key=os.environ["PRIVATE_KEY"]
-)
 
 
 @app.route("/", methods=["GET"])
@@ -31,12 +29,9 @@ def ncco():
 def recordings_webhook():
     logger.info(f"Recording webhook called")
     recording_meta = request.get_json()
-    recording = nexmo_client.get_recording(recording_meta["recording_url"])
 
-    recordingfile = f"./recordings/{recording_meta['recording_uuid']}.mp3"
-    os.makedirs(os.path.dirname(recordingfile), exist_ok=True)
-
-    with open(recordingfile, "wb") as f:
-        f.write(recording)
+    download_recording(
+        recording_meta["recording_url"], recording_meta["recording_uuid"]
+    )
 
     return "OK"

@@ -1,6 +1,7 @@
 import os
 import io
 import nexmo
+import colorful
 from google.cloud import speech
 from google.cloud.speech import enums as speech_enums
 from google.cloud.speech import types as speech_types
@@ -68,12 +69,14 @@ def classify_transcription(transcription_text, recording_uuid):
         content=transcription_text, type=language_enums.Document.Type.PLAIN_TEXT
     )
 
-    logger.debug(f"Classifying transcription for recording {recording_uuid}")
+    logger.info(f"Classifying transcription for recording {recording_uuid}")
     categories = client.classify_text(document).categories
 
     for category in categories:
-        print("=" * 20)
-        print("{:<16}: {}".format("name", category.name))
-        print("{:<16}: {}".format("confidence", category.confidence))
+        print(colorful.bold_violet("=" * 20))
+        print(colorful.bold_violet("{:<16}: {}".format("name", category.name)))
+        print(
+            colorful.bold_violet("{:<16}: {}".format("confidence", category.confidence))
+        )
 
     return True

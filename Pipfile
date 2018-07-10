@@ -14,6 +14,7 @@ peewee = "*"
 logzero = "*"
 google-cloud-speech = "*"
 google-cloud-language = "*"
+colorful = "*"
 
 
 [dev-packages]

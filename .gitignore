@@ -2,3 +2,6 @@
 .vscode/
 __pycache__/
 private.key
+.DS_Store
+huey.db
+recordings/

@@ -7,11 +7,12 @@ name = "pypi"
 
 [packages]
 
-Flask = "*"
+flask = "*"
 nexmo = "*"
 huey = "*"
 peewee = "*"
 logzero = "*"
+google-cloud-speech = "*"
 
 
 [dev-packages]

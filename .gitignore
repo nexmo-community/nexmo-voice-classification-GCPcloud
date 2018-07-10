@@ -2,6 +2,7 @@
 .vscode/
 __pycache__/
 private.key
+google_private.json
 .DS_Store
 huey.db
 recordings/
